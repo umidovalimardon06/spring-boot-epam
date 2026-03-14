@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Spring Boot — Learning HQ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:        #0a0e17;
+            --surface:   #111622;
+            --border:    #1e2740;
+            --green:     #00e676;
+            --green-dim: #00e67622;
+            --blue:      #4fc3f7;
+            --orange:    #ff7043;
+            --text:      #e8eaf6;
+            --muted:     #546e8a;
+            --font-head: 'Syne', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-mono);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── GRID NOISE BACKGROUND ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                    linear-gradient(var(--border) 1px, transparent 1px),
+                    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 48px 48px;
+            opacity: 0.35;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── GLOW ORBS ── */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.18;
+        }
+        .orb-1 { width: 600px; height: 600px; background: var(--green); top: -200px; left: -150px; animation: drift 14s ease-in-out infinite alternate; }
+        .orb-2 { width: 500px; height: 500px; background: var(--blue);  bottom: -150px; right: -100px; animation: drift 18s ease-in-out infinite alternate-reverse; }
+
+        @keyframes drift {
+            from { transform: translate(0, 0); }
+            to   { transform: translate(40px, 30px); }
+        }
+
+        /* ── LAYOUT ── */
+        .wrapper { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+
+        /* ── NAVBAR ── */
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10,14,23,0.85);
+            backdrop-filter: blur(16px);
+        }
+        .nav-inner {
+            max-width: 1100px; margin: 0 auto; padding: 0 2rem;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 58px;
+        }
+        .nav-logo {
+            font-family: var(--font-head); font-size: 1.1rem; font-weight: 800;
+            display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text);
+        }
+        .logo-leaf { color: var(--green); font-size: 1.4rem; }
+        .nav-badge {
+            font-size: 0.6rem; background: var(--green-dim); color: var(--green);
+            border: 1px solid var(--green); border-radius: 4px; padding: 2px 6px;
+            letter-spacing: 0.1em; text-transform: uppercase;
+        }
+        .nav-links { display: flex; gap: 1.5rem; }
+        .nav-links a {
+            color: var(--muted); text-decoration: none; font-size: 0.75rem;
+            letter-spacing: 0.05em; transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--green); }
+
+        /* ── HERO ── */
+        .hero { padding: 7rem 0 4rem; }
+        .hero-eyebrow {
+            font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+            color: var(--green); margin-bottom: 1.2rem;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .hero-eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--green); }
+
+        .hero h1 {
+            font-family: var(--font-head); font-size: clamp(2.8rem, 6vw, 5rem);
+            font-weight: 800; line-height: 1.05; letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+        }
+        .hero h1 span { color: var(--green); }
+        .hero h1 em { color: var(--blue); font-style: normal; }
+
+        .hero-sub {
+            font-size: 0.85rem; color: var(--muted); line-height: 1.8;
+            max-width: 540px; margin-bottom: 2.5rem;
+        }
+
+        .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-family: var(--font-mono); font-size: 0.78rem;
+            padding: 0.65rem 1.4rem; border-radius: 6px;
+            text-decoration: none; cursor: pointer; border: none;
+            transition: all 0.2s; letter-spacing: 0.04em;
+        }
+        .btn-primary {
+            background: var(--green); color: #000; font-weight: 600;
+        }
+        .btn-primary:hover { background: #69f0ae; transform: translateY(-1px); box-shadow: 0 8px 32px rgba(0,230,118,0.3); }
+        .btn-ghost {
+            background: transparent; color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover { border-color: var(--muted); background: var(--surface); }
+
+        /* ── STATUS BAR ── */
+        .status-bar {
+            margin: 3rem 0 0;
+            display: flex; gap: 2rem; flex-wrap: wrap;
+            padding: 1.2rem 1.5rem;
+            border: 1px solid var(--border); border-radius: 8px;
+            background: var(--surface);
+        }
+        .status-item { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; color: var(--muted); }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+        .dot.orange { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+        .dot.blue   { background: var(--blue);   box-shadow: 0 0 8px var(--blue); }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        /* ── SECTION TITLE ── */
+        .section { padding: 4rem 0; }
+        .section-title {
+            font-family: var(--font-head); font-size: 1.5rem; font-weight: 700;
+            margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px;
+        }
+        .section-title .accent { color: var(--green); }
+        .section-desc { color: var(--muted); font-size: 0.78rem; margin-bottom: 2rem; }
+
+        /* ── TOPIC CARDS ── */
+        .cards-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 1.5rem;
+            transition: all 0.25s; cursor: pointer; position: relative; overflow: hidden;
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--green), transparent);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .card:hover { border-color: var(--green); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,230,118,0.08); }
+        .card:hover::before { opacity: 1; }
+
+        .card-icon { font-size: 1.5rem; margin-bottom: 0.8rem; }
+        .card-title { font-family: var(--font-head); font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+        .card-desc { font-size: 0.72rem; color: var(--muted); line-height: 1.7; margin-bottom: 1rem; }
+        .card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .tag {
+            font-size: 0.6rem; padding: 3px 8px; border-radius: 4px;
+            background: var(--green-dim); color: var(--green);
+            border: 1px solid rgba(0,230,118,0.2); letter-spacing: 0.06em;
+        }
+        .tag.blue  { background: rgba(79,195,247,0.1); color: var(--blue); border-color: rgba(79,195,247,0.2); }
+        .tag.orange{ background: rgba(255,112,67,0.1); color: var(--orange); border-color: rgba(255,112,67,0.2); }
+
+        /* ── TERMINAL BLOCK ── */
+        .terminal {
+            background: #080c14; border: 1px solid var(--border);
+            border-radius: 10px; overflow: hidden; margin: 2rem 0;
+        }
+        .terminal-header {
+            padding: 0.7rem 1rem; background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .t-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .t-red { background: #ff5f57; } .t-yellow { background: #ffbd2e; } .t-green-t { background: #28c840; }
+        .terminal-title { font-size: 0.65rem; color: var(--muted); margin-left: auto; letter-spacing: 0.08em; }
+        .terminal-body { padding: 1.2rem 1.5rem; font-size: 0.75rem; line-height: 2; }
+        .t-prompt { color: var(--green); }
+        .t-cmd    { color: var(--text); }
+        .t-out    { color: var(--muted); }
+        .t-highlight { color: var(--blue); }
+        .t-warn   { color: var(--orange); }
+        .cursor   { display: inline-block; width: 8px; height: 14px; background: var(--green); vertical-align: middle; animation: blink 1.2s step-end infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+        /* ── ROADMAP ── */
+        .roadmap { display: flex; flex-direction: column; gap: 0; }
+        .roadmap-item {
+            display: grid; grid-template-columns: 80px 1fr;
+            gap: 0 1.5rem; position: relative;
+        }
+        .roadmap-item:not(:last-child) .rm-line { opacity: 1; }
+        .rm-left { display: flex; flex-direction: column; align-items: center; }
+        .rm-num {
+            width: 36px; height: 36px; border-radius: 50%;
+            border: 2px solid var(--green); background: var(--bg);
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-head); font-weight: 800; font-size: 0.8rem; color: var(--green);
+            flex-shrink: 0; z-index: 1;
+        }
+        .rm-num.done { background: var(--green); color: #000; }
+        .rm-line { width: 2px; flex: 1; background: var(--border); min-height: 32px; }
+        .rm-content {
+            padding: 0 0 2.5rem;
+        }
+        .rm-title { font-family: var(--font-head); font-size: 0.95rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .rm-sub   { font-size: 0.7rem; color: var(--muted); line-height: 1.7; }
+
+        /* ── FOOTER ── */
+        footer {
+            border-top: 1px solid var(--border); padding: 2rem 0;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+        }
+        .footer-left { font-size: 0.7rem; color: var(--muted); }
+        .footer-left span { color: var(--green); }
+        .footer-right { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.08em; }
+
+        /* ── DIVIDER ── */
+        .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+        /* ── ANIMATIONS ── */
+        .fade-up {
+            opacity: 0; transform: translateY(20px);
+            animation: fadeUp 0.6s ease forwards;
+        }
+        @keyframes fadeUp { to { opacity: 1; transform: none; } }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<!-- NAV -->
+<nav>
+    <div class="nav-inner">
+        <a class="nav-logo" href="#">
+            <span class="logo-leaf">🌿</span> spring-boot
+            <span class="nav-badge">learning</span>
+        </a>
+        <div class="nav-links">
+            <a href="#topics">Topics</a>
+            <a href="#roadmap">Roadmap</a>
+            <a href="#terminal">Terminal</a>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO -->
+<div class="wrapper">
+    <section class="hero">
+        <div class="hero-eyebrow fade-up">localhost:8080 — running</div>
+        <h1 class="fade-up delay-1">
+            Master<br><span>Spring Boot</span><br>with <em>Java 21</em>
+        </h1>
+        <p class="hero-sub fade-up delay-2">
+            Your personal learning HQ. Track progress, explore topics, and build real projects —
+            one branch at a time.
+        </p>
+        <div class="hero-actions fade-up delay-3">
+            <a href="#topics" class="btn btn-primary">▶ Start Learning</a>
+            <a href="#roadmap" class="btn btn-ghost">View Roadmap →</a>
+        </div>
+
+        <div class="status-bar fade-up delay-4">
+            <div class="status-item"><span class="dot"></span> App running on port 8080</div>
+            <div class="status-item"><span class="dot blue"></span> Java 21 · Spring Boot 3.x</div>
+            <div class="status-item"><span class="dot orange"></span> Git branch: main</div>
+        </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- TOPICS -->
+    <section class="section" id="topics">
+        <div class="section-title"><span class="accent">//</span> Core Topics</div>
+        <p class="section-desc">Each card is a branch. One topic at a time.</p>
+
+        <div class="cards-grid">
+            <div class="card">
+                <div class="card-icon">⚡</div>
+                <div class="card-title">Auto-Configuration</div>
+                <div class="card-desc">How Spring Boot wires everything automatically based on classpath detection. No XML needed.</div>
+                <div class="card-tags">
+                    <span class="tag">@SpringBootApp</span>
+                    <span class="tag">@Conditional</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon">🌐</div>
+                <div class="card-title">REST API</div>
+                <div class="card-desc">Build clean HTTP endpoints. Understand request mapping, response bodies, and status codes.</div>
+                <div class="card-tags">
+                    <span class="tag">@RestController</span>
+                    <span class="tag blue">@GetMapping</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon">🗄️</div>
+                <div class="card-title">Spring Data JPA</div>
+                <div class="card-desc">Interact with databases using repositories. Write zero SQL for basic CRUD operations.</div>
+                <div class="card-tags">
+                    <span class="tag">@Entity</span>
+                    <span class="tag blue">JpaRepository</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon">🔒</div>
+                <div class="card-title">Spring Security</div>
+                <div class="card-desc">Secure your endpoints with authentication and authorization. JWT, OAuth2, and more.</div>
+                <div class="card-tags">
+                    <span class="tag orange">@PreAuthorize</span>
+                    <span class="tag orange">JWT</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon">🩺</div>
+                <div class="card-title">Actuator</div>
+                <div class="card-desc">Monitor your running app. Health checks, metrics, environment — production-ready out of the box.</div>
+                <div class="card-tags">
+                    <span class="tag">/health</span>
+                    <span class="tag blue">/metrics</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon">🧪</div>
+                <div class="card-title">Testing</div>
+                <div class="card-desc">Write unit and integration tests with JUnit 5, Mockito, and @SpringBootTest.</div>
+                <div class="card-tags">
+                    <span class="tag">@SpringBootTest</span>
+                    <span class="tag blue">Mockito</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- TERMINAL -->
+    <section class="section" id="terminal">
+        <div class="section-title"><span class="accent">//</span> Quick Commands</div>
+        <p class="section-desc">Things you'll type every day.</p>
+
+        <div class="terminal">
+            <div class="terminal-header">
+                <span class="t-dot t-red"></span>
+                <span class="t-dot t-yellow"></span>
+                <span class="t-dot t-green-t"></span>
+                <span class="terminal-title">bash — spring-boot-epam</span>
+            </div>
+            <div class="terminal-body">
+                <div><span class="t-prompt">❯</span> <span class="t-cmd">git checkout -b <span class="t-highlight">feature/rest-api</span></span></div>
+                <div><span class="t-out">Switched to a new branch 'feature/rest-api'</span></div>
+                <br>
+                <div><span class="t-prompt">❯</span> <span class="t-cmd">./mvnw spring-boot:run</span></div>
+                <div><span class="t-out">  .   ____          _            __ _ _</span></div>
+                <div><span class="t-out"> /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \</span></div>
+                <div><span class="t-highlight"> :: Spring Boot :: (v3.x.x)</span></div>
+                <br>
+                <div><span class="t-prompt">❯</span> <span class="t-cmd">curl localhost:8080/actuator/health</span></div>
+                <div><span class="t-out">{"status":"<span class="t-highlight">UP</span>"}</span></div>
+                <br>
+                <div><span class="t-prompt">❯</span> <span class="t-cmd">git add . && git commit -m "<span class="t-warn">feat: add health endpoint</span>"</span></div>
+                <div><span class="t-out">[feature/rest-api 3a7f2c1] feat: add health endpoint</span></div>
+                <br>
+                <div><span class="t-prompt">❯</span> <span class="cursor"></span></div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ROADMAP -->
+    <section class="section" id="roadmap">
+        <div class="section-title"><span class="accent">//</span> Learning Roadmap</div>
+        <p class="section-desc">Follow this order for the smoothest journey.</p>
+
+        <div class="roadmap">
+            <div class="roadmap-item">
+                <div class="rm-left">
+                    <div class="rm-num done">✓</div>
+                    <div class="rm-line"></div>
+                </div>
+                <div class="rm-content">
+                    <div class="rm-title">Java 21 Foundations</div>
+                    <div class="rm-sub">Records, sealed classes, pattern matching, virtual threads, text blocks.</div>
+                </div>
+            </div>
+            <div class="roadmap-item">
+                <div class="rm-left">
+                    <div class="rm-num done">✓</div>
+                    <div class="rm-line"></div>
+                </div>
+                <div class="rm-content">
+                    <div class="rm-title">Spring Core + IoC / DI</div>
+                    <div class="rm-sub">Beans, ApplicationContext, @Component, @Autowired, lifecycle.</div>
+                </div>
+            </div>
+            <div class="roadmap-item">
+                <div class="rm-left">
+                    <div class="rm-num" style="border-color:var(--blue);color:var(--blue);">3</div>
+                    <div class="rm-line"></div>
+                </div>
+                <div class="rm-content">
+                    <div class="rm-title">Spring Boot Basics</div>
+                    <div class="rm-sub">Auto-config, starters, embedded server, application.properties, profiles.</div>
+                </div>
+            </div>
+            <div class="roadmap-item">
+                <div class="rm-left">
+                    <div class="rm-num">4</div>
+                    <div class="rm-line"></div>
+                </div>
+                <div class="rm-content">
+                    <div class="rm-title">Building REST APIs</div>
+                    <div class="rm-sub">Controllers, request mapping, validation, exception handling, DTOs.</div>
+                </div>
+            </div>
+            <div class="roadmap-item">
+                <div class="rm-left">
+                    <div class="rm-num">5</div>
+                    <div class="rm-line"></div>
+                </div>
+                <div class="rm-content">
+                    <div class="rm-title">Spring Data JPA</div>
+                    <div class="rm-sub">Entities, repositories, JPQL, relationships, transactions, H2 → MySQL.</div>
+                </div>
+            </div>
+            <div class="roadmap-item">
+                <div class="rm-left">
+                    <div class="rm-num">6</div>
+                    <div class="rm-line"></div>
+                </div>
+                <div class="rm-content">
+                    <div class="rm-title">Testing</div>
+                    <div class="rm-sub">JUnit 5, Mockito, @WebMvcTest, @DataJpaTest, integration tests.</div>
+                </div>
+            </div>
+            <div class="roadmap-item">
+                <div class="rm-left">
+                    <div class="rm-num">7</div>
+                    <div class="rm-line"></div>
+                </div>
+                <div class="rm-content">
+                    <div class="rm-title">Spring Security + JWT</div>
+                    <div class="rm-sub">Authentication, authorization, filter chains, JWT tokens, OAuth2.</div>
+                </div>
+            </div>
+            <div class="roadmap-item">
+                <div class="rm-left">
+                    <div class="rm-num">8</div>
+                </div>
+                <div class="rm-content" style="padding-bottom:0">
+                    <div class="rm-title">Deploy & Monitor</div>
+                    <div class="rm-sub">Docker, Actuator, Prometheus + Grafana, CI/CD with GitHub Actions.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="divider">
+
+    <footer>
+        <div class="footer-left">
+            🌿 spring-boot-epam &nbsp;·&nbsp; branch: <span>main</span> &nbsp;·&nbsp; Java <span>21</span> &nbsp;·&nbsp; Spring Boot <span>3.x</span>
+        </div>
+        <div class="footer-right">localhost:8080 · UP</div>
+    </footer>
+</div>
+
+</body>
+</html>

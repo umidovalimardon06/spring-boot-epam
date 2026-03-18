@@ -1,16 +1,16 @@
 package com.epam.springboot.controllers;
 
 import com.epam.springboot.models.Room;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.List;
 
-@Controller
+@RestController
 @RequestMapping("/rooms")
-public class RoomController {
+public class RoomRestController {
     private static final List<Room> rooms = new ArrayList<>();
 
     static {
@@ -20,9 +20,8 @@ public class RoomController {
     }
 
     @GetMapping
-    public String getAllRooms(Model model) {
-        model.addAttribute("rooms",rooms);
-        return "rooms";
+    public List<Room> getAllRooms() {
+        return rooms;
     }
 
 }
